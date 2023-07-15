@@ -20,6 +20,8 @@ help:
 	@echo '    lint               Run all linters'
 	@echo '    test               Run unit tests'
 	@echo '    build              Compile packages and dependencies'
+	@echo '    migrate-up         Applies migrations on database [test purposes]'
+	@echo '    migrate-down       Rollbacks migrations on database [test purposes]'
 	@echo ''
 
 clean:
@@ -57,3 +59,11 @@ build:
 	@go build -a -o ${BINARY_PATH}
 	@echo "Compiled successfully!"
 	@echo "Output directory: ${GOBIN}"
+
+migrate-up:
+	@echo "[migrate db up]"
+	@${BINARY_PATH} psql up --postgresql_password secretpassword --schema public
+
+migrate-down:
+	@echo "[migrate db down]"
+	@${BINARY_PATH} psql down --postgresql_password secretpassword --schema public

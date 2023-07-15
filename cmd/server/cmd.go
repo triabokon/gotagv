@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"context"
@@ -15,9 +15,9 @@ import (
 
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "gotagv",
-		Aliases:      []string{"gvt"},
-		Short:        "gotagv is a simple video and annotations management service.",
+		Use:          "server",
+		Aliases:      []string{"s"},
+		Short:        "starts a server.",
 		SilenceUsage: true,
 	}
 
@@ -26,7 +26,7 @@ func Cmd() *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) (err error) {
 
-		var logger, _ = zap.NewProduction(zap.AddStacktrace(zapcore.FatalLevel))
+		var logger, _ = zap.NewProduction(zap.AddStacktrace(zapcore.InfoLevel))
 
 		srv := server.New(&config.HTTP, logger)
 
@@ -50,10 +50,4 @@ func Cmd() *cobra.Command {
 		return nil
 	}
 	return cmd
-}
-
-func Execute() {
-	if err := Cmd().Execute(); err != nil {
-		os.Exit(1)
-	}
 }

@@ -17,7 +17,7 @@ type Claims struct {
 
 var jwtKey = []byte("my_secret_key")
 
-// CreateToken generates a new JWT token for a given username
+// CreateToken generates a new JWT token for a given username.
 func CreateToken(username string) (string, error) {
 	// Set token expiration time to be 30 minutes from now for testing purposes
 	expirationTime := time.Now().Add(1 * time.Minute)
@@ -42,7 +42,7 @@ func CreateToken(username string) (string, error) {
 	return tokenString, nil
 }
 
-// ValidateToken parses and validates a given token
+// ValidateToken parses and validates a given token.
 func ValidateToken(tknStr string) (*Claims, error) {
 	claims := &Claims{}
 

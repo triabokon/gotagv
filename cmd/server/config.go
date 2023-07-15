@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"github.com/spf13/pflag"
@@ -11,7 +11,7 @@ type Config struct {
 }
 
 func (c *Config) Flags() *pflag.FlagSet {
-	f := pflag.NewFlagSet("gotagvConfig", pflag.PanicOnError)
+	f := pflag.NewFlagSet("GoTagVConfig", pflag.PanicOnError)
 
 	f.AddFlagSet(c.HTTP.Flags("http"))
 
