@@ -172,13 +172,13 @@ func scanAnnotation(row pgx.Row, withDuration bool) (*model.Annotation, error) {
 	if withDuration {
 		rErr = row.Scan(
 			&a.ID, &a.VideoID, &a.UserID, &startTime,
-			&endTime, &a.Type, &a.Notes, &a.CreatedAt, &a.CreatedAt, &vidDuration,
+			&endTime, &a.Type, &a.Notes, &a.CreatedAt, &a.UpdatedAt, &vidDuration,
 		)
 		a.VideoDuration = time.Duration(vidDuration) * time.Second
 	} else {
 		rErr = row.Scan(
 			&a.ID, &a.VideoID, &a.UserID, &startTime,
-			&endTime, &a.Type, &a.Notes, &a.CreatedAt, &a.CreatedAt,
+			&endTime, &a.Type, &a.Notes, &a.CreatedAt, &a.UpdatedAt,
 		)
 	}
 	if rErr != nil {

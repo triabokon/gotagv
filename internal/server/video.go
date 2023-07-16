@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -15,8 +14,8 @@ import (
 )
 
 type CreateVideoParams struct {
-	URL      string        `json:"url"`
-	Duration time.Duration `json:"duration"`
+	URL      string `json:"url"`
+	Duration string `json:"duration"`
 }
 
 func (s *Server) CreateVideo(w http.ResponseWriter, r *http.Request) {
@@ -30,10 +29,15 @@ func (s *Server) CreateVideo(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to parse request: %w", dErr), http.StatusBadRequest)
 		return
 	}
+	duration, pErr := parseDuration(req.Duration)
+	if pErr != nil {
+		s.ErrorResponse(w, fmt.Errorf("failed to parse duration: %w", pErr), http.StatusBadRequest)
+		return
+	}
 	err := s.controller.CreateVideo(r.Context(), &controller.CreateVideoParams{
 		UserID:   userID,
 		URL:      req.URL,
-		Duration: req.Duration,
+		Duration: duration,
 	})
 	switch errors.Cause(err) {
 	case nil:
@@ -44,7 +48,7 @@ func (s *Server) CreateVideo(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to create video: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, nil)
+	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "video created successfully"})
 }
 
 func (s *Server) ListVideos(w http.ResponseWriter, r *http.Request) {
@@ -57,8 +61,7 @@ func (s *Server) ListVideos(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) DeleteVideo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	err := s.controller.DeleteVideo(r.Context(), vars[entityIDKey])
+	err := s.controller.DeleteVideo(r.Context(), mux.Vars(r)[entityIDKey])
 	switch errors.Cause(err) {
 	case nil:
 	case model.ErrInvalidArgument:
@@ -68,5 +71,5 @@ func (s *Server) DeleteVideo(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to delete video: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, nil)
+	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "video deleted successfully"})
 }

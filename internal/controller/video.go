@@ -45,7 +45,7 @@ func (c *Controller) CreateVideo(ctx context.Context, p *CreateVideoParams) erro
 	video := &model.Video{
 		ID:        uuid.New(),
 		UserID:    p.UserID,
-		URL:       p.UserID,
+		URL:       p.URL,
 		Duration:  p.Duration,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

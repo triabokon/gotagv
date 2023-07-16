@@ -3,8 +3,6 @@ package controller
 import (
 	"context"
 
-	"github.com/jackc/pgx/v4"
-
 	"github.com/triabokon/gotagv/internal/model"
 )
 
@@ -22,8 +20,6 @@ type Storage interface {
 	InsertAnnotation(ctx context.Context, a *model.Annotation) error
 	UpdateAnnotation(ctx context.Context, id string, p *model.UpdateAnnotationParams) error
 	DeleteAnnotation(ctx context.Context, id string) error
-
-	BeginTxFunc(ctx context.Context, txOptions pgx.TxOptions, f func(tx pgx.Tx) error) error
 }
 
 type Controller struct {

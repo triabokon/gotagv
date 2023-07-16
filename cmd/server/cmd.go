@@ -13,6 +13,7 @@ import (
 
 	"github.com/triabokon/gotagv/internal/auth"
 	"github.com/triabokon/gotagv/internal/controller"
+	"github.com/triabokon/gotagv/internal/flags"
 	"github.com/triabokon/gotagv/internal/postgresql"
 	"github.com/triabokon/gotagv/internal/server"
 	"github.com/triabokon/gotagv/internal/storage"
@@ -30,6 +31,7 @@ func Cmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(config.Flags())
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) (err error) {
+		flags.MustBindEnvToFlagSet(cmd.Flags())
 		var logger, _ = zap.NewProduction(zap.AddStacktrace(zapcore.InfoLevel))
 		pgClient, pgClientCl, err := postgresql.New(cmd.Context(), config.Postgres)
 		if err != nil {

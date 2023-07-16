@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -15,17 +14,17 @@ import (
 )
 
 type CreateAnnotationParams struct {
-	VideoID   string        `json:"video_id"`
-	StartTime time.Duration `json:"start_time"`
-	EndTime   time.Duration `json:"end_time"`
-	Type      int           `json:"type"`
-	Notes     string        `json:"notes"`
+	VideoID   string `json:"video_id"`
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+	Type      int    `json:"type"`
+	Notes     string `json:"notes"`
 }
 
 func (s *Server) CreateAnnotation(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(auth.UserIDKey).(string)
 	if !ok {
-		s.ErrorResponse(w, fmt.Errorf("can't access user id"), http.StatusUnauthorized)
+		s.ErrorResponse(w, fmt.Errorf("no user id"), http.StatusUnauthorized)
 		return
 	}
 	req := &CreateAnnotationParams{}
@@ -33,11 +32,21 @@ func (s *Server) CreateAnnotation(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to parse request: %w", dErr), http.StatusBadRequest)
 		return
 	}
+	startTime, pErr := parseDuration(req.StartTime)
+	if pErr != nil {
+		s.ErrorResponse(w, fmt.Errorf("failed to parse start time: %w", pErr), http.StatusBadRequest)
+		return
+	}
+	endTime, pErr := parseDuration(req.EndTime)
+	if pErr != nil {
+		s.ErrorResponse(w, fmt.Errorf("failed to parse start time: %w", pErr), http.StatusBadRequest)
+		return
+	}
 	err := s.controller.CreateAnnotation(r.Context(), &controller.CreateAnnotationParams{
 		VideoID:   req.VideoID,
 		UserID:    userID,
-		StartTime: req.StartTime,
-		EndTime:   req.EndTime,
+		StartTime: startTime,
+		EndTime:   endTime,
 		Type:      req.Type,
 		Notes:     req.Notes,
 	})
@@ -50,17 +59,40 @@ func (s *Server) CreateAnnotation(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to create annotation: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, nil)
+	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "annotation created successfully"})
+}
+
+type UpdateAnnotationParams struct {
+	StartTime *string `json:"start_time"`
+	EndTime   *string `json:"end_time"`
+	Type      *int    `json:"type"`
+	Notes     *string `json:"notes"`
 }
 
 func (s *Server) UpdateAnnotation(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	req := &model.UpdateAnnotationParams{}
+	req := &UpdateAnnotationParams{}
 	if dErr := json.NewDecoder(r.Body).Decode(req); dErr != nil {
 		s.ErrorResponse(w, fmt.Errorf("failed to parse request: %w", dErr), http.StatusBadRequest)
 		return
 	}
-	err := s.controller.UpdateAnnotation(r.Context(), vars[entityIDKey], req)
+	p := &model.UpdateAnnotationParams{Type: req.Type, Notes: req.Notes}
+	if req.StartTime != nil {
+		startTime, pErr := parseDuration(*req.StartTime)
+		if pErr != nil {
+			s.ErrorResponse(w, fmt.Errorf("failed to parse start time: %w", pErr), http.StatusBadRequest)
+			return
+		}
+		p.StartTime = &startTime
+	}
+	if req.EndTime != nil {
+		endTime, pErr := parseDuration(*req.EndTime)
+		if pErr != nil {
+			s.ErrorResponse(w, fmt.Errorf("failed to parse end time: %w", pErr), http.StatusBadRequest)
+			return
+		}
+		p.EndTime = &endTime
+	}
+	err := s.controller.UpdateAnnotation(r.Context(), mux.Vars(r)[entityIDKey], p)
 	switch errors.Cause(err) {
 	case nil:
 	case model.ErrInvalidArgument, model.ErrAlreadyExists:
@@ -73,7 +105,7 @@ func (s *Server) UpdateAnnotation(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to update annotation: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, nil)
+	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "annotation updated successfully"})
 }
 
 func (s *Server) ListAnnotations(w http.ResponseWriter, r *http.Request) {
@@ -86,8 +118,7 @@ func (s *Server) ListAnnotations(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) DeleteAnnotation(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	err := s.controller.DeleteAnnotation(r.Context(), vars[entityIDKey])
+	err := s.controller.DeleteAnnotation(r.Context(), mux.Vars(r)[entityIDKey])
 	switch errors.Cause(err) {
 	case nil:
 	case model.ErrInvalidArgument:
@@ -97,5 +128,5 @@ func (s *Server) DeleteAnnotation(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to delete annotation: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, nil)
+	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "annotation deleted successfully"})
 }

@@ -122,7 +122,7 @@ func scanVideo(row pgx.Row) (*model.Video, error) {
 	var v model.Video
 	if rErr := row.Scan(
 		&v.ID, &v.UserID, &v.URL,
-		&durationSeconds, &v.CreatedAt, &v.CreatedAt,
+		&durationSeconds, &v.CreatedAt, &v.UpdatedAt,
 	); rErr != nil {
 		return nil, fmt.Errorf("failed to scan video: %w", rErr)
 	}

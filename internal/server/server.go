@@ -154,13 +154,13 @@ func (s *Server) JSONResponse(w http.ResponseWriter, result interface{}) {
 	}
 }
 
-type WebError struct {
+type Response struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
 func (s *Server) ErrorResponse(w http.ResponseWriter, err error, code int) {
-	body, err := json.MarshalIndent(&WebError{Code: code, Message: err.Error()}, "", "  ")
+	body, err := json.MarshalIndent(&Response{Code: code, Message: err.Error()}, "", "  ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		s.logger.Error("JSON marshal failed", zap.Error(err))
@@ -172,4 +172,12 @@ func (s *Server) ErrorResponse(w http.ResponseWriter, err error, code int) {
 	if _, wErr := w.Write(body); wErr != nil {
 		s.logger.Error("failed to write response body", zap.Error(wErr))
 	}
+}
+
+func parseDuration(d string) (time.Duration, error) {
+	duration, err := time.ParseDuration(d)
+	if err != nil {
+		return 0, err
+	}
+	return duration, nil
 }
