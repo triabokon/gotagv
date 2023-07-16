@@ -20,8 +20,8 @@ func (s *Storage) GetAnnotationWithDuration(ctx context.Context, id string) (*mo
 	sql, params, err := postgresql.StatementBuilder.
 		Select(append(annotationColumns(), "videos.duration")...).
 		From(annotationTable).
-		Where(squirrel.Eq{"id": id}).
-		Join(fmt.Sprintf("%s ON %s.video_id = %s.id;", videoTable, annotationTable, videoTable)).
+		Where(squirrel.Eq{"annotations.id": id}).
+		Join(fmt.Sprintf("%s ON %s.video_id = %s.id", videoTable, annotationTable, videoTable)).
 		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
@@ -30,23 +30,21 @@ func (s *Storage) GetAnnotationWithDuration(ctx context.Context, id string) (*mo
 	row := s.client.DB.QueryRow(ctx, sql, params...)
 
 	a, sErr := scanAnnotation(row, true)
-	if sErr != nil {
-		return nil, fmt.Errorf("scan failed: %w", sErr)
-	}
-	switch errors.Cause(err) {
-	case nil:
-		return a, nil
-	case pgx.ErrNoRows:
+	if errors.Is(sErr, pgx.ErrNoRows) {
 		return nil, model.ErrNotFound
-	default:
-		return nil, err
 	}
+	if sErr != nil {
+		return nil, fmt.Errorf("failed to get annotation: %w", sErr)
+	}
+	return a, nil
 }
 
-func (s *Storage) ListAnnotations(ctx context.Context) ([]*model.Annotation, error) {
+func (s *Storage) ListAnnotations(ctx context.Context, videoID string) ([]*model.Annotation, error) {
 	sql, params, err := postgresql.StatementBuilder.
 		Select(annotationColumns()...).
+		Where(squirrel.Eq{"video_id": videoID}).
 		From(annotationTable).
+		OrderBy("updated_at").
 		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
@@ -81,8 +79,10 @@ func (s *Storage) InsertAnnotation(ctx context.Context, a *model.Annotation) err
 			"user_id":    a.UserID,
 			"start_time": a.StartTime.Seconds(),
 			"end_time":   a.EndTime.Seconds(),
-			"type":       a.VideoID,
-			"notes":      a.VideoID,
+			"type":       a.Type,
+			"message":    a.Message,
+			"url":        a.URL,
+			"title":      a.Title,
 			"created_at": a.CreatedAt,
 			"updated_at": a.UpdatedAt,
 		}).ToSql()
@@ -105,23 +105,28 @@ func (s *Storage) UpdateAnnotation(ctx context.Context, id string, p *model.Upda
 	if p.NoUpdates() {
 		return fmt.Errorf("no updates")
 	}
-
 	builder := postgresql.StatementBuilder.
 		Update(annotationTable).
 		Where(squirrel.Eq{"id": id}).
 		Set("updated_at", time.Now())
 
 	if p.StartTime != nil {
-		builder = builder.Set("start_time", *p.StartTime)
+		builder = builder.Set("start_time", p.StartTime.Seconds())
 	}
 	if p.EndTime != nil {
-		builder = builder.Set("end_time", *p.EndTime)
+		builder = builder.Set("end_time", p.EndTime.Seconds())
 	}
 	if p.Type != nil {
 		builder = builder.Set("type", *p.Type)
 	}
-	if p.Notes != nil {
-		builder = builder.Set("notes", *p.Notes)
+	if p.Message != nil {
+		builder = builder.Set("message", *p.Message)
+	}
+	if p.URL != nil {
+		builder = builder.Set("url", *p.URL)
+	}
+	if p.Title != nil {
+		builder = builder.Set("title", *p.Title)
 	}
 	sql, params, err := builder.ToSql()
 	if err != nil {
@@ -159,8 +164,9 @@ func (s *Storage) DeleteAnnotation(ctx context.Context, id string) error {
 
 func annotationColumns() []string {
 	columns := []string{
-		"id", "video_id", "user_id", "start_time",
-		"end_time", "type", "notes", "created_at", "updated_at",
+		"annotations.id", "annotations.video_id", "annotations.user_id", "annotations.start_time",
+		"annotations.end_time", "annotations.type", "annotations.message", "annotations.url",
+		"annotations.title", "annotations.created_at", "annotations.updated_at",
 	}
 	return columns
 }
@@ -172,13 +178,15 @@ func scanAnnotation(row pgx.Row, withDuration bool) (*model.Annotation, error) {
 	if withDuration {
 		rErr = row.Scan(
 			&a.ID, &a.VideoID, &a.UserID, &startTime,
-			&endTime, &a.Type, &a.Notes, &a.CreatedAt, &a.UpdatedAt, &vidDuration,
+			&endTime, &a.Type, &a.Message, &a.URL, &a.Title,
+			&a.CreatedAt, &a.UpdatedAt, &vidDuration,
 		)
 		a.VideoDuration = time.Duration(vidDuration) * time.Second
 	} else {
 		rErr = row.Scan(
 			&a.ID, &a.VideoID, &a.UserID, &startTime,
-			&endTime, &a.Type, &a.Notes, &a.CreatedAt, &a.UpdatedAt,
+			&endTime, &a.Type, &a.Message, &a.URL, &a.Title,
+			&a.CreatedAt, &a.UpdatedAt,
 		)
 	}
 	if rErr != nil {

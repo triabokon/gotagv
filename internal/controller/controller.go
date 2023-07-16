@@ -16,7 +16,7 @@ type Storage interface {
 	DeleteVideo(ctx context.Context, id string) error
 
 	GetAnnotationWithDuration(ctx context.Context, id string) (*model.Annotation, error)
-	ListAnnotations(ctx context.Context) ([]*model.Annotation, error)
+	ListAnnotations(ctx context.Context, videoID string) ([]*model.Annotation, error)
 	InsertAnnotation(ctx context.Context, a *model.Annotation) error
 	UpdateAnnotation(ctx context.Context, id string, p *model.UpdateAnnotationParams) error
 	DeleteAnnotation(ctx context.Context, id string) error

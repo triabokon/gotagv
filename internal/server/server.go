@@ -33,11 +33,11 @@ type Controller interface {
 	CreateUser(ctx context.Context, id string) error
 
 	ListVideos(ctx context.Context) ([]*model.Video, error)
-	CreateVideo(ctx context.Context, p *controller.CreateVideoParams) error
+	CreateVideo(ctx context.Context, p *controller.CreateVideoParams) (string, error)
 	DeleteVideo(ctx context.Context, id string) error
 
-	ListAnnotations(ctx context.Context) ([]*model.Annotation, error)
-	CreateAnnotation(ctx context.Context, p *controller.CreateAnnotationParams) error
+	ListAnnotations(ctx context.Context, p *controller.ListAnnotationsParams) ([]*model.Annotation, error)
+	CreateAnnotation(ctx context.Context, p *model.CreateAnnotationParams) (string, error)
 	UpdateAnnotation(ctx context.Context, id string, p *model.UpdateAnnotationParams) error
 	DeleteAnnotation(ctx context.Context, id string) error
 }
@@ -139,7 +139,7 @@ func (s *Server) ServeWithGracefulShutdown(ctx context.Context, logger *zap.Logg
 	return err
 }
 
-func (s *Server) JSONResponse(w http.ResponseWriter, result interface{}) {
+func (s *Server) SuccessResponse(w http.ResponseWriter, result interface{}) {
 	body, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -155,12 +155,11 @@ func (s *Server) JSONResponse(w http.ResponseWriter, result interface{}) {
 }
 
 type Response struct {
-	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
 func (s *Server) ErrorResponse(w http.ResponseWriter, err error, code int) {
-	body, err := json.MarshalIndent(&Response{Code: code, Message: err.Error()}, "", "  ")
+	body, err := json.MarshalIndent(&Response{Message: err.Error()}, "", "  ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		s.logger.Error("JSON marshal failed", zap.Error(err))

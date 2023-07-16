@@ -36,5 +36,5 @@ func (s *Server) HelloHandler(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("can't access user id"), http.StatusUnauthorized)
 		return
 	}
-	s.JSONResponse(w, fmt.Sprintf("Hello, %s!", userID))
+	s.SuccessResponse(w, fmt.Sprintf("Hello, %s!", userID))
 }

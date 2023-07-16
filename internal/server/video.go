@@ -13,9 +13,13 @@ import (
 	"github.com/triabokon/gotagv/internal/model"
 )
 
-type CreateVideoParams struct {
+type CreateVideoRequest struct {
 	URL      string `json:"url"`
 	Duration string `json:"duration"`
+}
+
+type CreateVideoResponse struct {
+	VideoID string `json:"video_id"`
 }
 
 func (s *Server) CreateVideo(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +28,7 @@ func (s *Server) CreateVideo(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("can't access user id"), http.StatusUnauthorized)
 		return
 	}
-	req := &CreateVideoParams{}
+	req := &CreateVideoRequest{}
 	if dErr := json.NewDecoder(r.Body).Decode(req); dErr != nil {
 		s.ErrorResponse(w, fmt.Errorf("failed to parse request: %w", dErr), http.StatusBadRequest)
 		return
@@ -34,21 +38,24 @@ func (s *Server) CreateVideo(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to parse duration: %w", pErr), http.StatusBadRequest)
 		return
 	}
-	err := s.controller.CreateVideo(r.Context(), &controller.CreateVideoParams{
+	videoID, err := s.controller.CreateVideo(r.Context(), &controller.CreateVideoParams{
 		UserID:   userID,
 		URL:      req.URL,
 		Duration: duration,
 	})
-	switch errors.Cause(err) {
-	case nil:
-	case model.ErrInvalidArgument:
+	if errors.Is(err, model.ErrInvalidArgument) {
 		s.ErrorResponse(w, fmt.Errorf("failed to create video: %w", err), http.StatusBadRequest)
 		return
-	default:
+	}
+	if err != nil {
 		s.ErrorResponse(w, fmt.Errorf("failed to create video: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "video created successfully"})
+	s.SuccessResponse(w, CreateVideoResponse{VideoID: videoID})
+}
+
+type ListVideosResponse struct {
+	Videos []*model.Video `json:"videos"`
 }
 
 func (s *Server) ListVideos(w http.ResponseWriter, r *http.Request) {
@@ -57,19 +64,18 @@ func (s *Server) ListVideos(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to list videos: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, videos)
+	s.SuccessResponse(w, &ListVideosResponse{Videos: videos})
 }
 
 func (s *Server) DeleteVideo(w http.ResponseWriter, r *http.Request) {
 	err := s.controller.DeleteVideo(r.Context(), mux.Vars(r)[entityIDKey])
-	switch errors.Cause(err) {
-	case nil:
-	case model.ErrInvalidArgument:
+	if errors.Is(err, model.ErrInvalidArgument) {
 		s.ErrorResponse(w, fmt.Errorf("failed to delete video: %w", err), http.StatusBadRequest)
 		return
-	default:
+	}
+	if err != nil {
 		s.ErrorResponse(w, fmt.Errorf("failed to delete video: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, Response{Code: http.StatusOK, Message: "video deleted successfully"})
+	s.SuccessResponse(w, Response{Message: "video deleted successfully"})
 }

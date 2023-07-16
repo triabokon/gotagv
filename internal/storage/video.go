@@ -20,6 +20,7 @@ func (s *Storage) ListVideos(ctx context.Context) ([]*model.Video, error) {
 	sql, params, err := postgresql.StatementBuilder.
 		Select(videoColumns()...).
 		From(videoTable).
+		OrderBy("updated_at").
 		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
@@ -57,17 +58,13 @@ func (s *Storage) GetVideo(ctx context.Context, id string) (*model.Video, error)
 
 	row := s.client.DB.QueryRow(ctx, sql, params...)
 	v, sErr := scanVideo(row)
-	if sErr != nil {
-		return nil, fmt.Errorf("scan failed: %w", sErr)
-	}
-	switch errors.Cause(err) {
-	case nil:
-		return v, nil
-	case pgx.ErrNoRows:
+	if errors.Is(sErr, pgx.ErrNoRows) {
 		return nil, model.ErrNotFound
-	default:
-		return nil, err
 	}
+	if sErr != nil {
+		return nil, fmt.Errorf("failed to get video: %w", sErr)
+	}
+	return v, nil
 }
 
 func (s *Storage) InsertVideo(ctx context.Context, video *model.Video) error {

@@ -28,7 +28,7 @@ func (s *Server) SignUp(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to create jwt token: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, &SignUpResponse{UserID: userID, Token: tokenString})
+	s.SuccessResponse(w, &SignUpResponse{UserID: userID, Token: tokenString})
 }
 
 type SignInRequest struct {
@@ -59,5 +59,5 @@ func (s *Server) SignIn(w http.ResponseWriter, r *http.Request) {
 		s.ErrorResponse(w, fmt.Errorf("failed to create jwt token: %w", err), http.StatusInternalServerError)
 		return
 	}
-	s.JSONResponse(w, &SignInResponse{Token: tokenString})
+	s.SuccessResponse(w, &SignInResponse{Token: tokenString})
 }

@@ -4,13 +4,13 @@
 -- Table: User
 CREATE TABLE IF NOT EXISTS users
 (
-    id character varying(255) NOT NULL
+    id character varying(255) NOT NULL primary key
 );
 
 -- Table: Videos
 CREATE TABLE IF NOT EXISTS videos
 (
-    id character varying(255) NOT NULL,
+    id character varying(255) NOT NULL primary key,
     user_id character varying(255) NOT NULL,
     url character varying(255) NOT NULL,
     duration integer NOT NULL,
@@ -18,20 +18,19 @@ CREATE TABLE IF NOT EXISTS videos
     updated_at timestamp without time zone NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS videos_created_at
-    ON videos USING btree (created_at);
-
 
 -- Table: Annotations
 CREATE TABLE IF NOT EXISTS annotations
 (
-    id character varying(255) NOT NULL,
-    video_id character varying(255) NOT NULL,
+    id character varying(255) NOT NULL primary key,
+    video_id character varying(255) NOT NULL references videos(id) on delete cascade,
     user_id character varying(255) NOT NULL,
     start_time integer NOT NULL,
     end_time integer NOT NULL,
-    type integer NOT NULL,
-    notes text,
+    type character varying(255) NOT NULL,
+    message text,
+    url character varying(255),
+    title character varying(255),
     created_at timestamp without time zone NOT NULL DEFAULT now(),
     updated_at timestamp without time zone NOT NULL DEFAULT now()
 );

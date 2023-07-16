@@ -10,76 +10,54 @@ import (
 	"github.com/triabokon/gotagv/internal/model"
 )
 
-func (c *Controller) ListAnnotations(ctx context.Context) ([]*model.Annotation, error) {
-	annotations, err := c.storage.ListAnnotations(ctx)
+type ListAnnotationsParams struct {
+	VideoID string `json:"video_id"`
+}
+
+func (c *Controller) ListAnnotations(ctx context.Context, p *ListAnnotationsParams) ([]*model.Annotation, error) {
+	if p.VideoID == "" {
+		return nil, fmt.Errorf("empty video id: %w", model.ErrInvalidArgument)
+	}
+	annotations, err := c.storage.ListAnnotations(ctx, p.VideoID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list annotations: %w", err)
 	}
 	return annotations, nil
 }
 
-type CreateAnnotationParams struct {
-	VideoID   string        `json:"video_id"`
-	UserID    string        `json:"user_id"`
-	StartTime time.Duration `json:"start_time"`
-	EndTime   time.Duration `json:"end_time"`
-	Type      int           `json:"type"`
-	Notes     string        `json:"notes"`
-}
-
-func (p *CreateAnnotationParams) Validate() error {
-	if p.UserID == "" {
-		return fmt.Errorf("empty user id: %w", model.ErrInvalidArgument)
-	}
-	if p.VideoID == "" {
-		return fmt.Errorf("empty video id: %w", model.ErrInvalidArgument)
-	}
-	if p.StartTime <= 0 {
-		return fmt.Errorf("start time should be above 0: %w", model.ErrInvalidArgument)
-	}
-	if p.EndTime <= 0 {
-		return fmt.Errorf("start time should be above 0: %w", model.ErrInvalidArgument)
-	}
-	if p.EndTime < p.StartTime {
-		return fmt.Errorf("start time should be less or equal than end time: %w", model.ErrInvalidArgument)
-	}
-	// todo: change to enum
-	if p.Type == 0 {
-		return fmt.Errorf("type should be specified: %w", model.ErrInvalidArgument)
-	}
-	return nil
-}
-
-func (c *Controller) CreateAnnotation(ctx context.Context, p *CreateAnnotationParams) error {
+func (c *Controller) CreateAnnotation(ctx context.Context, p *model.CreateAnnotationParams) (string, error) {
 	if vErr := p.Validate(); vErr != nil {
-		return fmt.Errorf("invalid annotation params: %w", vErr)
+		return "", fmt.Errorf("invalid annotation params: %w", vErr)
 	}
 	video, vErr := c.storage.GetVideo(ctx, p.VideoID)
 	if vErr != nil {
-		return fmt.Errorf("failed to get video: %w", vErr)
+		return "", fmt.Errorf("failed to get video: %w", vErr)
 	}
 	if video.Duration < p.StartTime {
-		return fmt.Errorf("annotation start time exceeds video duration: %w", model.ErrInvalidArgument)
+		return "", fmt.Errorf("annotation start time exceeds video duration: %w", model.ErrInvalidArgument)
 	}
 	if video.Duration < p.EndTime {
-		return fmt.Errorf("annotation end time exceeds video duration: %w", model.ErrInvalidArgument)
+		return "", fmt.Errorf("annotation end time exceeds video duration: %w", model.ErrInvalidArgument)
 	}
 
+	annotationID := uuid.New()
 	annotation := &model.Annotation{
-		ID:        uuid.New(),
+		ID:        annotationID,
 		VideoID:   p.VideoID,
 		UserID:    p.UserID,
 		StartTime: p.StartTime,
 		EndTime:   p.EndTime,
 		Type:      p.Type,
-		Notes:     p.Notes,
+		Message:   p.Message,
+		URL:       p.URL,
+		Title:     p.Title,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 	if err := c.storage.InsertAnnotation(ctx, annotation); err != nil {
-		return fmt.Errorf("failed to create annotation: %w", err)
+		return "", fmt.Errorf("failed to create annotation: %w", err)
 	}
-	return nil
+	return annotationID, nil
 }
 
 func (c *Controller) UpdateAnnotation(ctx context.Context, id string, p *model.UpdateAnnotationParams) error {
@@ -89,9 +67,9 @@ func (c *Controller) UpdateAnnotation(ctx context.Context, id string, p *model.U
 	if vErr := p.Validate(); vErr != nil {
 		return fmt.Errorf("invalid annotation params: %w", vErr)
 	}
-	annotation, vErr := c.storage.GetAnnotationWithDuration(ctx, id)
-	if vErr != nil {
-		return fmt.Errorf("failed to get video: %w", vErr)
+	annotation, qErr := c.storage.GetAnnotationWithDuration(ctx, id)
+	if qErr != nil {
+		return fmt.Errorf("failed to get annotation: %w", qErr)
 	}
 	if p.StartTime != nil && annotation.VideoDuration < *p.StartTime {
 		return fmt.Errorf("annotation start time exceeds video duration: %w", model.ErrInvalidArgument)

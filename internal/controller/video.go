@@ -37,13 +37,14 @@ func (p *CreateVideoParams) Validate() error {
 	return nil
 }
 
-func (c *Controller) CreateVideo(ctx context.Context, p *CreateVideoParams) error {
+func (c *Controller) CreateVideo(ctx context.Context, p *CreateVideoParams) (string, error) {
 	if vErr := p.Validate(); vErr != nil {
-		return fmt.Errorf("invalid video params: %w", vErr)
+		return "", fmt.Errorf("invalid video params: %w", vErr)
 	}
 
+	videoID := uuid.New()
 	video := &model.Video{
-		ID:        uuid.New(),
+		ID:        videoID,
 		UserID:    p.UserID,
 		URL:       p.URL,
 		Duration:  p.Duration,
@@ -51,9 +52,9 @@ func (c *Controller) CreateVideo(ctx context.Context, p *CreateVideoParams) erro
 		UpdatedAt: time.Now(),
 	}
 	if err := c.storage.InsertVideo(ctx, video); err != nil {
-		return fmt.Errorf("failed to create video: %w", err)
+		return "", fmt.Errorf("failed to create video: %w", err)
 	}
-	return nil
+	return videoID, nil
 }
 
 func (c *Controller) DeleteVideo(ctx context.Context, id string) error {
