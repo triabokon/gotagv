@@ -14,7 +14,7 @@ type MigrateConfig struct {
 func (c *MigrateConfig) Flags() *pflag.FlagSet {
 	f := pflag.NewFlagSet("PgDBMigrator", pflag.PanicOnError)
 
-	f.AddFlagSet(c.PgDB.Flags("PgDB", "postgresql"))
+	f.AddFlagSet(c.PgDB.Flags("postgresql"))
 	f.StringVar(&c.Table, "table", "migrations", "table name where to store the last applied migration id."+
 		" For empty string use the default table name for the migration lib")
 	f.StringVar(&c.Schema, "schema", "", "schema name where to look for a `table`. "+

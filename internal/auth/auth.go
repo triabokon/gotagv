@@ -10,21 +10,34 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type ContextKeys string
+
+const UserIDKey ContextKeys = "user_id"
+
+type Auth struct {
+	config *Config
+}
+
+func New(config *Config) *Auth {
+	srv := &Auth{
+		config: config,
+	}
+	return srv
+}
+
 type Claims struct {
-	Username string `json:"username"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-var jwtKey = []byte("my_secret_key")
-
 // CreateToken generates a new JWT token for a given username.
-func CreateToken(username string) (string, error) {
+func (a *Auth) CreateToken(userID string) (string, error) {
 	// Set token expiration time to be 30 minutes from now for testing purposes
 	expirationTime := time.Now().Add(1 * time.Minute)
 
-	// Create the JWT claims, which includes the username and expiry time
+	// Create the JWT claims, which includes the userID and expiry time
 	claims := &Claims{
-		Username: username,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
@@ -34,7 +47,7 @@ func CreateToken(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Create the JWT string
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(a.config.JWTSecret)
 	if err != nil {
 		return "", err
 	}
@@ -43,14 +56,14 @@ func CreateToken(username string) (string, error) {
 }
 
 // ValidateToken parses and validates a given token.
-func ValidateToken(tknStr string) (*Claims, error) {
+func (a *Auth) ValidateToken(tknStr string) (*Claims, error) {
 	claims := &Claims{}
 
 	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return jwtKey, nil
+		return a.config.JWTSecret, nil
 	})
 
 	if err != nil {
@@ -64,7 +77,7 @@ func ValidateToken(tknStr string) (*Claims, error) {
 	return claims, nil
 }
 
-func HandleAuth(next http.HandlerFunc) http.HandlerFunc {
+func (a *Auth) HandleAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		splitToken := strings.Split(authHeader, "Bearer ")
@@ -73,13 +86,13 @@ func HandleAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		claims, err := ValidateToken(splitToken[1])
+		claims, err := a.ValidateToken(splitToken[1])
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), "username", claims.Username))
+		r = r.WithContext(context.WithValue(r.Context(), UserIDKey, claims.UserID))
 
 		next(w, r)
 	}

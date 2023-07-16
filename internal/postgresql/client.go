@@ -13,9 +13,10 @@ import (
 
 	_ "github.com/jackc/pgx/v4/stdlib" // is required by std sql lib
 
-	"github.com/triabokon/gotagv/flags"
+	"github.com/triabokon/gotagv/internal/flags"
 )
 
+//nolint:gochecknoglobals // need it as is
 var StatementBuilder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 type Config struct {
@@ -46,7 +47,8 @@ func DSNFromConfig(c Config) string { //nolint:gocritic
 	return strings.Join(parts, " ")
 }
 
-func (c *Config) Flags(name, prefix string) *pflag.FlagSet {
+func (c *Config) Flags(prefix string) *pflag.FlagSet {
+	const name = "PostgresDB"
 	f := pflag.NewFlagSet(name, pflag.PanicOnError)
 	f.StringVar(&c.Host, "host", "127.0.0.1", "")
 	f.StringVar(&c.Port, "port", "5432", "")

@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/triabokon/gotagv/flags"
+	"github.com/triabokon/gotagv/internal/flags"
 )
 
 func MigrationCommand(migrations []*migrate.Migration) *cobra.Command {
@@ -66,13 +66,7 @@ func ApplyMigrations(
 		}
 	}()
 
-	var nApplied int
-	var err error
-	if direction == migrate.Up {
-		nApplied, err = migrate.Exec(db, "postgres", source, direction)
-	} else {
-		nApplied, err = migrate.Exec(db, "postgres", source, direction)
-	}
+	nApplied, err := migrate.Exec(db, "postgres", source, direction)
 	if err != nil {
 		return errors.Wrap(err, "failed to exec migrations")
 	}

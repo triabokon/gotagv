@@ -7,7 +7,7 @@ import (
 
 	"github.com/triabokon/gotagv/cmd/server"
 	fm "github.com/triabokon/gotagv/internal/migrations"
-	"github.com/triabokon/gotagv/postgresql"
+	"github.com/triabokon/gotagv/internal/postgresql"
 )
 
 func Execute() error {

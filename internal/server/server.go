@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -12,19 +11,53 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/gorilla/mux"
+
+	"github.com/triabokon/gotagv/internal/auth"
+	"github.com/triabokon/gotagv/internal/controller"
+	"github.com/triabokon/gotagv/internal/model"
 )
 
-type Server struct {
-	router *http.ServeMux
-	logger *zap.Logger
-	config *Config
+const entityIDKey = "id"
+
+type Auth interface {
+	CreateToken(userID string) (string, error)
+	ValidateToken(tknStr string) (*auth.Claims, error)
+
+	HandleAuth(next http.HandlerFunc) http.HandlerFunc
 }
 
-func New(config *Config, logger *zap.Logger) *Server {
+type Controller interface {
+	GetUser(ctx context.Context, id string) error
+	CreateUser(ctx context.Context, id string) error
+
+	ListVideos(ctx context.Context) ([]*model.Video, error)
+	CreateVideo(ctx context.Context, p *controller.CreateVideoParams) error
+	DeleteVideo(ctx context.Context, id string) error
+
+	ListAnnotations(ctx context.Context) ([]*model.Annotation, error)
+	CreateAnnotation(ctx context.Context, p *controller.CreateAnnotationParams) error
+	UpdateAnnotation(ctx context.Context, id string, p *model.UpdateAnnotationParams) error
+	DeleteAnnotation(ctx context.Context, id string) error
+}
+
+type Server struct {
+	router *mux.Router
+	logger *zap.Logger
+	config *Config
+
+	auth       Auth
+	controller Controller
+}
+
+func New(logger *zap.Logger, config *Config, a Auth, ctrl Controller) *Server {
 	srv := &Server{
-		router: http.NewServeMux(),
-		logger: logger,
-		config: config,
+		router:     mux.NewRouter(),
+		logger:     logger,
+		config:     config,
+		auth:       a,
+		controller: ctrl,
 	}
 	return srv
 }
@@ -107,29 +140,7 @@ func (s *Server) ServeWithGracefulShutdown(ctx context.Context, logger *zap.Logg
 }
 
 func (s *Server) JSONResponse(w http.ResponseWriter, result interface{}) {
-	body, err := json.Marshal(result)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		s.logger.Error("JSON marshal failed", zap.Error(err))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(http.StatusOK)
-	w.Write(prettyJSON(body))
-}
-
-func (s *Server) ErrorResponse(w http.ResponseWriter, error string, code int) {
-	data := struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	}{
-		Code:    code,
-		Message: error,
-	}
-
-	body, err := json.Marshal(data)
+	body, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		s.logger.Error("JSON marshal failed", zap.Error(err))
@@ -138,11 +149,27 @@ func (s *Server) ErrorResponse(w http.ResponseWriter, error string, code int) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write(prettyJSON(body))
+	if _, wErr := w.Write(body); wErr != nil {
+		s.logger.Error("failed to write response body", zap.Error(wErr))
+	}
 }
 
-func prettyJSON(b []byte) []byte {
-	var out bytes.Buffer
-	json.Indent(&out, b, "", "  ")
-	return out.Bytes()
+type WebError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func (s *Server) ErrorResponse(w http.ResponseWriter, err error, code int) {
+	body, err := json.MarshalIndent(&WebError{Code: code, Message: err.Error()}, "", "  ")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		s.logger.Error("JSON marshal failed", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(code)
+	if _, wErr := w.Write(body); wErr != nil {
+		s.logger.Error("failed to write response body", zap.Error(wErr))
+	}
 }

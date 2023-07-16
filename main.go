@@ -1,7 +1,13 @@
 package main
 
-import "github.com/triabokon/gotagv/cmd"
+import (
+	"os"
+
+	"github.com/triabokon/gotagv/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

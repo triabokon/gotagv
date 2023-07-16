@@ -5,6 +5,8 @@ go 1.20
 require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/gorilla/mux v1.8.0
+	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.8.1
@@ -19,7 +21,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.14.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
