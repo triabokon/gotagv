@@ -6,12 +6,12 @@ Gotagv is a simple video and annotations management service written in Go.
 
 The service has Restful API to manage videos and annotations with basic API security using JWT Token. 
 
-The project is structured into three main modules:
+The project is structured into four main modules:
 
 1. **Auth**: creating and validating JWT token to authorize user into system.
-2. **Server**: serves HTTP requests and converts data from request body and query params to Go structs.
+2. **Server**: serves HTTP requests and converts data from request body and query params.
 3. **Controller**: implementation of main business logic like data validation, conversion etc.
-4. **Storage**: implements storage methods and queries to  database.
+4. **Storage**: implements storage methods and queries to the database.
 
 ## Getting Started
 
@@ -19,13 +19,13 @@ The project uses Go Modules for dependency management.
 All the dependencies for the application are specified in the `go.mod` file.
 Dependencies that are needed for linting are specified in the `tools/go.mod`.
 
-Also, service `Docker` image and can be launched with docker-compose.
+Also, service has `Docker` image and can be launched with `docker-compose`.
 
 ### Prerequisites
 
 Make sure you have installed `Docker` and `docker-compose` on your system. 
 Refer to [official Docker installation guide](https://docs.docker.com/engine/install/) and
-[official docker-compose installation guide](https://docs.docker.com/compose/install/).
+[docker-compose installation guide](https://docs.docker.com/compose/install/) if needed.
 
 ### Installation
 
@@ -49,7 +49,7 @@ Build and run the project:
 ```bash
 docker-compose up --build
 ```
-This will launch two containers - `postgres` database and HTTP web server.
+This will launch two containers - `postgres` database and HTTP `web` server.
 
 ## Migrating database
 
@@ -72,11 +72,9 @@ docker-compose up
 ```
 
 2. Create user to login into system:
-
 ```bash
 curl -X POST 'localhost:8080/signup'
 ```
-
 Example response:
 ```
 {
@@ -85,11 +83,9 @@ Example response:
 }
 ```
 3. Create video
-
 ```bash
 curl -X POST 'localhost:8080/videos/add' --header 'Authorization: Bearer <jwt_token>' -d '{"url": "https://youtube.com/test", "duration": "2m37s"}'
 ```
-
 Example response:
 ```
 {
@@ -98,11 +94,9 @@ Example response:
 ```
 
 4. Get all videos
-
 ```bash
 curl -X POST 'localhost:8080/videos' --header 'Authorization: Bearer <jwt_token>'
 ```
-
 Example response:
 ```
 {
@@ -120,7 +114,6 @@ Example response:
 ```
 
 5. Create annotation
-
 ```bash
 curl -X POST 'localhost:8080/annotations/add' --header 'Authorization: Bearer <jwt_token>' -d '{
     "video_id": "0bb49819-a5be-437e-8fc2-d4f3cebef283",
@@ -130,7 +123,6 @@ curl -X POST 'localhost:8080/annotations/add' --header 'Authorization: Bearer <j
     "title": "First annotation!"
 }'
 ```
-
 Example response:
 ```
 {
@@ -139,11 +131,9 @@ Example response:
 ```
 
 6. Get annotations for specific video
-
 ```bash
 curl -X POST 'localhost:8080/annotations' --header 'Authorization: Bearer <jwt_token>' -d '{"video_id": "0bb49819-a5be-437e-8fc2-d4f3cebef283"}'
 ```
-
 Example response:
 ```
 {
@@ -164,7 +154,6 @@ Example response:
 ```
 
 7. Update annotation
-
 ```bash
 curl -X POST 'localhost:8080/annotations/update/fdf2d1ef-9f91-4adf-9723-75f3e777e56b' --header 'Authorization: Bearer <jwt_token>' -d '{
     "start_time": "1m10s",
@@ -224,7 +213,7 @@ While developing this task some assumptions were made:
 Some other things could be done to improve the project:
 
 1. Unit and integration tests: it would be great to write unit tests and integration tests.
-2. Paging and Sorting: for APIs returning multiple items (e.g., listing all annotations), introduce paging to limit the response size and sorting to customize the order of the results.
+2. Paging and sorting: for APIs returning multiple items (e.g. listing all annotations), introduce paging to limit the response size and sorting to customize the order of the results.
 3. Caching: caching could be used, to improve performance, especially for read-heavy APIs.
-4. Video Upload and Processing: while the current API assumes videos are stored elsewhere, a future feature could allow users to upload videos directly, possibly with additional video processing functionalities (e.g., video transcoding, thumbnail generation).
-5. Role-Based Access Control: now, it's assumed that any authenticated user can perform all operations, but in the future, roles and permissions could be added so that certain operations can be restricted (e.g., only video owner can delete video).
+4. Video upload and processing: while the current API assumes videos are stored elsewhere, a future feature could allow users to upload videos directly, possibly with additional video processing functionalities (e.g. video transcoding, thumbnail generation).
+5. Role-based access control: now, it's assumed that any authenticated user can perform all operations, but in the future, roles and permissions could be added so that certain operations can be restricted (e.g. only video owner can delete video).
