@@ -1,7 +1,8 @@
 package postgresql
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -48,7 +49,7 @@ func ApplyMigrations(
 	direction migrate.MigrationDirection, migrations []*migrate.Migration, config MigrateConfig,
 ) error {
 	if config.Table == "" {
-		return errors.New("empty table to store migrations state")
+		return fmt.Errorf("empty table to store migrations state")
 	}
 
 	migrate.SetTable(config.Table)
@@ -58,7 +59,7 @@ func ApplyMigrations(
 	source := migrate.MemoryMigrationSource{Migrations: migrations}
 	db, closeDB, pgDBErr := NewStdSQL(config.PgDB)
 	if pgDBErr != nil {
-		return errors.Wrap(pgDBErr, "failed to init pg std client")
+		return fmt.Errorf("failed to init pg std client: %w", pgDBErr)
 	}
 	defer func() {
 		if pgClErr := closeDB(); pgClErr != nil {
@@ -68,7 +69,7 @@ func ApplyMigrations(
 
 	nApplied, err := migrate.Exec(db, "postgres", source, direction)
 	if err != nil {
-		return errors.Wrap(err, "failed to exec migrations")
+		return fmt.Errorf("failed to exec migrations: %w", err)
 	}
 
 	if nApplied > 0 {
@@ -79,6 +80,5 @@ func ApplyMigrations(
 	} else {
 		logger.Info("no migrations applied")
 	}
-
 	return nil
 }

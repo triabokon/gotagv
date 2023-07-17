@@ -14,7 +14,7 @@ func (c *Controller) GetUser(ctx context.Context, id string) error {
 
 	_, err := c.storage.GetUser(ctx, id)
 	if err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
+		return fmt.Errorf("failed to get user: %w", err)
 	}
 	return nil
 }

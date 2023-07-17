@@ -20,12 +20,13 @@ func MapWithPrefix(f *pflag.FlagSet, name string, errorHandling pflag.ErrorHandl
 	return fNew
 }
 
-func MustBindEnvToFlagSet(fs *pflag.FlagSet) { // todo: check if I would need it in the end.
+func MustBindEnvToFlagSet(fs *pflag.FlagSet) {
 	if err := BindEnvToFlagSet(fs); err != nil {
 		panic(err)
 	}
 }
 
+// BindEnvToFlagSet maps env variables values to config flags.
 func BindEnvToFlagSet(fs *pflag.FlagSet) error {
 	set := map[string]bool{}
 	fs.Visit(func(f *pflag.Flag) {
@@ -68,5 +69,5 @@ func BindEnvToFlagSet(fs *pflag.FlagSet) error {
 			return
 		}
 	})
-	return flagError // nolint:wrapcheck // error wrapped inside visit func above
+	return flagError
 }

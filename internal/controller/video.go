@@ -52,7 +52,7 @@ func (c *Controller) CreateVideo(ctx context.Context, p *CreateVideoParams) (str
 		UpdatedAt: time.Now(),
 	}
 	if err := c.storage.InsertVideo(ctx, video); err != nil {
-		return "", fmt.Errorf("failed to create video: %w", err)
+		return "", fmt.Errorf("failed to insert video: %w", err)
 	}
 	return videoID, nil
 }

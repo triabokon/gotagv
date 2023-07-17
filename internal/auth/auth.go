@@ -31,7 +31,7 @@ type Claims struct {
 }
 
 func (a *Auth) CreateToken(userID string) (string, error) {
-	// Set token expiration time to be 30 minutes from now for testing purposes
+	// set token expiration time to be 30 minutes from now for testing purposes.
 	expirationTime := time.Now().Add(30 * time.Minute)
 	claims := &Claims{
 		UserID: userID,

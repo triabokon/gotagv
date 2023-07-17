@@ -157,7 +157,7 @@ func (s *Storage) DeleteAnnotation(ctx context.Context, id string) error {
 	}
 	_, err = s.client.DB.Exec(ctx, sql, params...)
 	if err != nil {
-		return fmt.Errorf("failed to insert: %w", err)
+		return fmt.Errorf("failed to delete: %w", err)
 	}
 	return nil
 }

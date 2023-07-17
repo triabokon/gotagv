@@ -58,7 +58,7 @@ func Cmd() *cobra.Command {
 		}()
 
 		if sErr := srv.ServeWithGracefulShutdown(ctx, logger); sErr != nil {
-			logger.Error("Failed to start server", zap.Error(sErr))
+			logger.Error("failed to start server", zap.Error(sErr))
 			os.Exit(1)
 		}
 		return nil

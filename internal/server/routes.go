@@ -3,13 +3,10 @@ package server
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/triabokon/gotagv/internal/auth"
 )
 
 func (s *Server) SetRoutes() {
-	// todo: make simple health check
-	s.router.HandleFunc("/", s.auth.HandleAuth(s.HelloHandler))
+	s.router.HandleFunc("/healthcheck", s.HelloHandler)
 
 	s.router.HandleFunc("/signup", s.SignUp)
 	s.router.HandleFunc("/signin", s.SignIn)
@@ -30,11 +27,6 @@ func (s *Server) SetRoutes() {
 	)
 }
 
-func (s *Server) HelloHandler(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(auth.UserIDKey).(string)
-	if !ok {
-		s.ErrorResponse(w, fmt.Errorf("can't access user id"), http.StatusUnauthorized)
-		return
-	}
-	s.SuccessResponse(w, fmt.Sprintf("Hello, %s!", userID))
+func (s *Server) HelloHandler(w http.ResponseWriter, _ *http.Request) {
+	s.SuccessResponse(w, "Ok!")
 }

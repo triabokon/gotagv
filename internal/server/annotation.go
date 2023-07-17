@@ -109,7 +109,7 @@ func toUpdateAnnotationParams(r *UpdateAnnotationRequest) (*model.UpdateAnnotati
 	if r.EndTime != nil {
 		endTime, pErr := parseDuration(*r.EndTime)
 		if pErr != nil {
-			return nil, fmt.Errorf("failed to parse start time: %w", pErr)
+			return nil, fmt.Errorf("failed to parse end time: %w", pErr)
 		}
 		p.EndTime = &endTime
 	}
@@ -164,11 +164,11 @@ func (s *Server) ListAnnotations(w http.ResponseWriter, r *http.Request) {
 func (s *Server) DeleteAnnotation(w http.ResponseWriter, r *http.Request) {
 	err := s.controller.DeleteAnnotation(r.Context(), mux.Vars(r)[entityIDKey])
 	if errors.Is(err, model.ErrInvalidArgument) {
-		s.ErrorResponse(w, fmt.Errorf("failed to update annotation: %w", err), http.StatusBadRequest)
+		s.ErrorResponse(w, fmt.Errorf("failed to delete annotation: %w", err), http.StatusBadRequest)
 		return
 	}
 	if err != nil {
-		s.ErrorResponse(w, fmt.Errorf("failed to update annotation: %w", err), http.StatusInternalServerError)
+		s.ErrorResponse(w, fmt.Errorf("failed to delete annotation: %w", err), http.StatusInternalServerError)
 		return
 	}
 	s.SuccessResponse(w, Response{Message: "annotation deleted successfully"})

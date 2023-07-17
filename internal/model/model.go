@@ -61,7 +61,7 @@ func (p *CreateAnnotationParams) Validate() error {
 		return fmt.Errorf("start time should be above 0: %w", ErrInvalidArgument)
 	}
 	if p.EndTime <= 0 {
-		return fmt.Errorf("start time should be above 0: %w", ErrInvalidArgument)
+		return fmt.Errorf("end time should be above 0: %w", ErrInvalidArgument)
 	}
 	if p.EndTime < p.StartTime {
 		return fmt.Errorf("start time should be less or equal than end time: %w", ErrInvalidArgument)
@@ -92,10 +92,10 @@ func (p *UpdateAnnotationParams) NoUpdates() bool {
 
 func (p *UpdateAnnotationParams) Validate() error {
 	if p.StartTime != nil && *p.StartTime == 0 {
-		return fmt.Errorf("empty user id: %w", ErrInvalidArgument)
+		return fmt.Errorf("empty start time: %w", ErrInvalidArgument)
 	}
 	if p.EndTime != nil && *p.EndTime == 0 {
-		return fmt.Errorf("empty video id: %w", ErrInvalidArgument)
+		return fmt.Errorf("empty end time: %w", ErrInvalidArgument)
 	}
 	if p.EndTime != nil && p.StartTime != nil && *p.EndTime < *p.StartTime {
 		return fmt.Errorf("start time should be less or equal than end time: %w", ErrInvalidArgument)

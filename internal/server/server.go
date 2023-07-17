@@ -124,11 +124,10 @@ func (s *Server) ServeWithGracefulShutdown(ctx context.Context, logger *zap.Logg
 			"http server ListenAndServe failed",
 			zap.Error(err),
 		)
-		// hiding bugs and races in server shutdown proc
 		err = nil
 	}
 
-	// Ensure graceful shutdown
+	// ensure graceful shutdown
 	if atomic.LoadInt64(&shutdown) != 1 {
 		// if there is no shutdown signal, execute shutdown anyway
 		gracefulShutdown()

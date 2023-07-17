@@ -28,7 +28,7 @@ type Config struct {
 	SSLMode  string
 }
 
-func DSNFromConfig(c Config) string { //nolint:gocritic
+func DSNFromConfig(c Config) string {
 	var parts []string
 
 	for key, value := range map[string]string{
@@ -68,7 +68,7 @@ func (c *Client) Stat() *pgxpool.Stat {
 	return c.DB.Stat()
 }
 
-func New(ctx context.Context, conf Config) (*Client, func() error, error) { //nolint:gocritic
+func New(ctx context.Context, conf Config) (*Client, func() error, error) {
 	dsn := DSNFromConfig(conf)
 	parsedConf, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
@@ -89,7 +89,7 @@ func New(ctx context.Context, conf Config) (*Client, func() error, error) { //no
 	return &Client{DB: db}, closer, nil
 }
 
-func NewStdSQL(config Config) (*sql.DB, func() error, error) { //nolint:gocritic
+func NewStdSQL(config Config) (*sql.DB, func() error, error) {
 	dsn := DSNFromConfig(config)
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {

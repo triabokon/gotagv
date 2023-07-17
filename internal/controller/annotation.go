@@ -55,7 +55,7 @@ func (c *Controller) CreateAnnotation(ctx context.Context, p *model.CreateAnnota
 		UpdatedAt: time.Now(),
 	}
 	if err := c.storage.InsertAnnotation(ctx, annotation); err != nil {
-		return "", fmt.Errorf("failed to create annotation: %w", err)
+		return "", fmt.Errorf("failed to insert annotation: %w", err)
 	}
 	return annotationID, nil
 }

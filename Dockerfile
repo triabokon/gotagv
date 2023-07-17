@@ -2,7 +2,7 @@
 FROM golang:1.20.6-bullseye
 
 ARG BINARY_NAME=gotagv
-# Create working directory under /app
+# Create working directory
 WORKDIR /go/src/github.com/triabokon/${BINARY_NAME}/
 
 # copy module cache
@@ -15,7 +15,6 @@ COPY ./internal ./internal
 
 RUN go mod download
 RUN make build
-
 
 # Make sure to expose the port the HTTP server is using
 EXPOSE 8080
