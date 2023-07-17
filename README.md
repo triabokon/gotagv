@@ -95,7 +95,7 @@ Example response:
 
 4. Get all videos
 ```bash
-curl -X POST 'localhost:8080/videos' --header 'Authorization: Bearer <jwt_token>'
+curl 'localhost:8080/videos' --header 'Authorization: Bearer <jwt_token>'
 ```
 Example response:
 ```
@@ -132,7 +132,7 @@ Example response:
 
 6. Get annotations for specific video
 ```bash
-curl -X POST 'localhost:8080/annotations' --header 'Authorization: Bearer <jwt_token>' -d '{"video_id": "0bb49819-a5be-437e-8fc2-d4f3cebef283"}'
+curl 'localhost:8080/annotations' --header 'Authorization: Bearer <jwt_token>' -d '{"video_id": "0bb49819-a5be-437e-8fc2-d4f3cebef283"}'
 ```
 Example response:
 ```
