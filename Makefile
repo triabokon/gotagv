@@ -50,8 +50,10 @@ build:
 
 migrate-up:
 	@echo "[migrate db up]"
+	@make build
 	@${BINARY_PATH} psql up --postgresql_password secretpassword --schema public
 
 migrate-down:
 	@echo "[migrate db down]"
+	@make build
 	@${BINARY_PATH} psql down --postgresql_password secretpassword --schema public
