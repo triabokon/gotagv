@@ -16,12 +16,10 @@ help:
 	@echo '    clean              Remove binaries'
 	@echo '    download-deps      Download and install dependencies'
 	@echo '    tidy               Perform go tidy steps'
-	@echo '    generate           Perform go generate'
 	@echo '    lint               Run all linters'
-	@echo '    test               Run unit tests'
 	@echo '    build              Compile packages and dependencies'
-	@echo '    migrate-up         Applies migrations on database [test purposes]'
-	@echo '    migrate-down       Rollbacks migrations on database [test purposes]'
+	@echo '    migrate-up         Applies migrations on database'
+	@echo '    migrate-down       Rollbacks migrations on database'
 	@echo ''
 
 clean:
@@ -39,20 +37,10 @@ tidy:
 	@echo "[tidying]"
 	@go mod tidy
 
-generate:
-	@echo "[generate]"
-	@go install -modfile=tools/go.mod github.com/golang/mock/mockgen
-	@find . -not -path '*/\.*' -name \*_mock.go -delete
-	@go generate ${PACKAGES}
-
 lint:
 	@echo "[lint]"
 	@go install -modfile=tools/go.mod github.com/golangci/golangci-lint/cmd/golangci-lint
 	@${GOBIN}/golangci-lint run
-
-test:
-	@echo "[test]"
-	@go test -race -v -count=1 ./...
 
 build:
 	@echo "[build]"

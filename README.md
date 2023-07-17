@@ -17,7 +17,7 @@ The project is structured into three main modules:
 
 The project uses Go Modules for dependency management.
 All the dependencies for the application are specified in the `go.mod` file.
-Dependencies that are needed for linting and testing are specified in the `tools/go.mod`.
+Dependencies that are needed for linting are specified in the `tools/go.mod`.
 
 Also, service `Docker` image and can be launched with docker-compose.
 
@@ -50,6 +50,19 @@ Build and run the project:
 docker-compose up --build
 ```
 This will launch two containers - `postgres` database and HTTP web server.
+
+## Migrating database
+
+You can migrate database using commands:
+
+1. to apply migrations:
+```bash
+make migrate-up
+```
+2. to rollback migrations:
+```bash
+make migrate-down
+```
 
 ## Usage example
 
@@ -169,7 +182,7 @@ curl -X POST 'localhost:8080/annotations/delete/fdf2d1ef-9f91-4adf-9723-75f3e777
 curl -X POST 'localhost:8080/videos/delete/0bb49819-a5be-437e-8fc2-d4f3cebef283' --header 'Authorization: Bearer <jwt_token>'
 ```
 
-## Testing and linting
+## Linting
 
 This project uses `golangci-lint` for linting, it's configuration is specified in `.golangci.yml`.
 
@@ -177,14 +190,6 @@ To lint the code, you need to run command:
 ```bash
 make lint
 ```
-
-Following command runs all tests:
-```bash
-make test
-```
-Unit tests use mocks that are generated with `mockgen`.
-
-*Note: when changing some interfaces, mocks should be updated. This could be done with `make generate` command.*
 
 ## Makefile
 
@@ -201,13 +206,10 @@ Available targets are:
     clean              Remove binaries
     download-deps      Download and install dependencies
     tidy               Perform go tidy steps
-    generate           Perform go generate
     lint               Run all linters
-    test               Run unit tests
     build              Compile packages and dependencies
-    migrate-up         Applies migrations on database [test purposes]
-    migrate-down       Rollbacks migrations on database [test purposes]
-
+    migrate-up         Applies migrations on database
+    migrate-down       Rollbacks migrations on database
 ```
 
 ## Assumptions
